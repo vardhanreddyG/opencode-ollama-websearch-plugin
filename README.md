@@ -8,6 +8,14 @@ OpenCode can search the web for current information; this plugin routes those se
 
 - An Ollama account with a web search API key — create one at [ollama.com/settings/keys](https://ollama.com/settings/keys) (free tier available)
 
+## Authentication
+
+The plugin resolves your API key in this order:
+
+1. **`ollama-cloud` integration connection** — if you've already connected Ollama Cloud via `/connect providers`, the plugin reuses that key automatically. No extra setup needed.
+2. **`apiKey` plugin option** — set explicitly in `opencode.json(c)`.
+3. **`OLLAMA_API_KEY` environment variable** — exported before starting OpenCode.
+
 ## Install
 
 ### CLI (global)
@@ -67,12 +75,12 @@ Clone the repo and point OpenCode at it:
 
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
-| `apiKey` | string | `OLLAMA_API_KEY` env var | Ollama API key |
+| `apiKey` | string | integration / `OLLAMA_API_KEY` env var | Ollama API key |
 | `maxResults` | number | `5` | Max results per query (Ollama allows 1–10) |
 
 ## Usage
 
-Set your API key before starting OpenCode:
+If you haven't connected Ollama Cloud yet, run `/connect providers` in OpenCode and select **Ollama Cloud**, or set your API key before starting:
 
 ```sh
 export OLLAMA_API_KEY="your_api_key"

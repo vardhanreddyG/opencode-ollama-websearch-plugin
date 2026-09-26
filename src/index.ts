@@ -1,6 +1,8 @@
 import { Plugin } from "@opencode/plugin"
+import type { Credential } from "@opencode/plugin"
 
 const API_URL = "https://ollama.com/api/web_search"
+const INTEGRATION_ID = "ollama-cloud"
 
 interface OllamaSearchResult {
   title?: string
@@ -14,13 +16,50 @@ interface OllamaSearchResponse {
 
 interface ProviderOptions {
   /**
-   * Ollama API key. Defaults to the `OLLAMA_API_KEY` environment variable.
+   * Ollama API key. When omitted, the plugin resolves the key from the
+   * `ollama-cloud` integration connection (set up via `/connect providers`),
+   * then falls back to the `OLLAMA_API_KEY` environment variable.
    */
   apiKey?: string
   /**
    * Maximum number of results per query. Ollama allows 1-10; defaults to 5.
    */
   maxResults?: number
+}
+
+interface KeyCredential {
+  type: "key" | "oauth"
+  key?: string
+  access?: string
+}
+
+type PluginContext = import("@opencode/plugin/promise/plugin").Context
+
+/**
+ * Resolve the Ollama API key, preferring a key the user already connected via
+ * `/connect providers` (the `ollama-cloud` integration), then the plugin
+ * option, then the `OLLAMA_API_KEY` environment variable.
+ */
+async function resolveApiKey(
+  ctx: PluginContext,
+  options: ProviderOptions,
+): Promise<string | undefined> {
+  if (options.apiKey) return options.apiKey
+
+  try {
+    const connection = await ctx.integration.connection.active(INTEGRATION_ID)
+    if (connection) {
+      const credential = (await ctx.integration.connection.resolve(
+        connection,
+      )) as Credential.Value | undefined
+      if (credential?.type === "key") return credential.key
+      if (credential?.type === "oauth") return credential.access
+    }
+  } catch {
+    // Integration unavailable; fall through to the environment variable.
+  }
+
+  return process.env.OLLAMA_API_KEY
 }
 
 export default Plugin.define({
@@ -33,10 +72,10 @@ export default Plugin.define({
         id: "ollama",
         name: "Ollama",
         execute: async ({ query }, { signal }) => {
-          const apiKey = options.apiKey ?? process.env.OLLAMA_API_KEY
+          const apiKey = await resolveApiKey(ctx, options)
           if (!apiKey) {
             throw new Error(
-              "Ollama web search requires an API key. Create one at https://ollama.com/settings/keys and set it via the `apiKey` plugin option or the OLLAMA_API_KEY environment variable.",
+              "Ollama web search requires an API key. Connect the Ollama Cloud integration with /connect providers, set the `apiKey` plugin option, or export OLLAMA_API_KEY.",
             )
           }
 
