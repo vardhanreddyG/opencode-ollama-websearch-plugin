@@ -20,19 +20,19 @@ The plugin resolves your API key in this order:
 
 ### From GitHub (config)
 
-Add the Git spec to your `opencode.json(c)`. OpenCode resolves and installs it on startup:
+Add the HTTPS Git spec to your `opencode.json(c)`. OpenCode resolves and installs it on startup:
 
 ```jsonc
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugins": ["github:vardhanreddyG/opencode-ollama-websearch-plugin"],
+  "plugins": ["git+https://github.com/vardhanreddyG/opencode-ollama-websearch-plugin.git#main"],
   "websearch": {
     "provider": "ollama"
   },
 }
 ```
 
-> **Note:** `opencode plugin add github:vardhanreddyG/opencode-ollama-websearch-plugin` may fail with `git dep preparation failed` due to a known issue in OpenCode's bundled npm runtime (it reproduces with other plugin repos too). Installing via the config entry works reliably. The `dist/` build output is committed, so no build toolchain is needed on the installing machine.
+> **Note:** `opencode plugin add` currently fails with `git dep preparation failed` for **all** Git specs (SSH and HTTPS, any repo) due to a bug in OpenCode's bundled npm runtime — it invokes its internal npm without the package spec. Installing via the config entry works reliably. The `dist/` build output is committed, so no build toolchain is needed on the installing machine.
 
 ### From npm (once published)
 
