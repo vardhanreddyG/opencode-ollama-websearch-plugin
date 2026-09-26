@@ -28,14 +28,17 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "scripts",
+    "README.md",
+    "LICENSE"
   ],
   "engines": {
     "node": ">=20"
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
-    "prepack": "npm run build",
+    "prepack": "node scripts/prepack.mjs",
     "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
