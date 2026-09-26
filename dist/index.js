@@ -1,6 +1,8 @@
 import { Plugin } from "@opencode/plugin";
 const DEFAULT_BASE_URL = "https://ollama.com";
 // Integration IDs to try when resolving a connected Ollama account, in order.
+// "ollama-cloud" is the current OpenCode integration; "ollama" is kept for
+// forward-compatibility with alternative catalog IDs.
 const INTEGRATION_IDS = ["ollama-cloud", "ollama"];
 /**
  * Resolve the Ollama API key, preferring a key the user already connected via
@@ -8,7 +10,7 @@ const INTEGRATION_IDS = ["ollama-cloud", "ollama"];
  * environment variable.
  */
 async function resolveApiKey(ctx, options) {
-    if (options.apiKey)
+    if (typeof options.apiKey === "string" && options.apiKey)
         return options.apiKey;
     for (const integrationID of INTEGRATION_IDS) {
         try {
@@ -27,23 +29,32 @@ async function resolveApiKey(ctx, options) {
     }
     return process.env.OLLAMA_API_KEY;
 }
+function normalizeMaxResults(value) {
+    if (typeof value !== "number" || !Number.isFinite(value))
+        return 5;
+    return Math.min(Math.max(value, 1), 10);
+}
 export default Plugin.define({
     id: "opencode.ollama.websearch",
     async setup(ctx) {
         const options = (ctx.options ?? {});
-        const apiKey = await resolveApiKey(ctx, options);
-        if (!apiKey) {
-            console.log("ollama-websearch: no API key found (options.apiKey, OLLAMA_API_KEY, or connected Ollama account); provider not registered");
-            return;
-        }
-        const baseURL = (options.baseURL ?? DEFAULT_BASE_URL).replace(/\/+$/, "");
+        const baseURL = typeof options.baseURL === "string" && options.baseURL
+            ? options.baseURL.replace(/\/+$/, "")
+            : DEFAULT_BASE_URL;
         const webSearchURL = `${baseURL}/api/web_search`;
-        const maxResults = Math.min(Math.max(options.maxResults ?? 5, 1), 10);
+        const maxResults = normalizeMaxResults(options.maxResults);
         await ctx.websearch.transform((editor) => {
             editor.add({
                 id: "ollama",
                 name: "Ollama",
+                // Resolve the key per query rather than once at setup so that a
+                // connection made via /connect providers after OpenCode starts, or
+                // a refreshed OAuth token, is picked up without a restart.
                 execute: async ({ query }, { signal }) => {
+                    const apiKey = await resolveApiKey(ctx, options);
+                    if (!apiKey) {
+                        throw new Error("Ollama web search: no API key found. Connect Ollama Cloud with /connect providers, set the apiKey plugin option, or export OLLAMA_API_KEY.");
+                    }
                     const response = await fetch(webSearchURL, {
                         method: "POST",
                         headers: {
@@ -85,6 +96,5 @@ export default Plugin.define({
             if (current === undefined)
                 editor.default.set("ollama");
         });
-        console.log("ollama-websearch: ollama provider registered");
     },
 });

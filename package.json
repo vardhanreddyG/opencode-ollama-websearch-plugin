@@ -46,7 +46,6 @@
   },
   "devDependencies": {
     "@opencode/plugin": "^2.0.18",
-    "@tsconfig/node20": "^20.1.2",
     "@types/node": "^24",
     "typescript": "^5.9.3"
   }

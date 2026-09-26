@@ -10,31 +10,17 @@ OpenCode can search the web for current information; this plugin routes those se
 
 ## Authentication
 
-The plugin resolves your API key in this order:
+The plugin resolves your API key per query, in this order:
 
-1. **`ollama-cloud` integration connection** — if you've already connected Ollama Cloud via `/connect providers`, the plugin reuses that key automatically. No extra setup needed.
+1. **`ollama-cloud` integration connection** — if you've already connected Ollama Cloud via `/connect providers`, the plugin reuses that key automatically. No extra setup needed. Connections made while OpenCode is running are picked up without a restart.
 2. **`apiKey` plugin option** — set explicitly in `opencode.json(c)`.
 3. **`OLLAMA_API_KEY` environment variable** — exported before starting OpenCode.
 
+> **Note:** the plugin resolves the key for **every query** rather than once at startup, so connecting your account later or refreshing credentials never requires a restart.
+
 ## Install
 
-### From GitHub (config)
-
-Add the HTTPS Git spec to your `opencode.json(c)`. OpenCode resolves and installs it on startup:
-
-```jsonc
-{
-  "$schema": "https://opencode.ai/config.json",
-  "plugins": ["git+https://github.com/vardhanreddyG/opencode-ollama-websearch-plugin.git#main"],
-  "websearch": {
-    "provider": "ollama"
-  },
-}
-```
-
-> **Note:** `opencode plugin add` currently fails with `git dep preparation failed` for **all** Git specs (SSH and HTTPS, any repo) due to a bug in OpenCode's bundled npm runtime — it invokes its internal npm without the package spec. Installing via the config entry works reliably. The `dist/` build output is committed, so no build toolchain is needed on the installing machine.
-
-### From npm (once published)
+### From npm (recommended)
 
 ```sh
 opencode plugin add opencode-ollama-websearch-plugin
@@ -59,19 +45,40 @@ Or with options:
 }
 ```
 
-### Local development
+### From GitHub
 
-Clone the repo and point OpenCode at it:
+Add the HTTPS Git spec to your `opencode.json(c)`:
 
 ```jsonc
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugins": ["./path/to/opencode-ollama-websearch-plugin"],
+  "plugins": ["git+https://github.com/vardhanreddyG/opencode-ollama-websearch-plugin.git#main"],
   "websearch": {
     "provider": "ollama"
   },
 }
 ```
+
+> **Caveat:** on OpenCode 2.0.18, Git-spec installs fail with `git dep preparation failed` due to a bug in OpenCode's bundled npm runtime (it invokes its internal npm without the package spec; reproduces with any plugin repo, SSH or HTTPS). If you hit this, use the npm package or the local install below. The `dist/` build output is committed, so no build toolchain is needed on the installing machine.
+
+### Local development (verified with OpenCode 2.0.18)
+
+Clone the repo, then load it via OpenCode's plugin **discovery directory** — a config `plugins` entry with a local path does not load on 2.0.18 (silently skipped):
+
+```sh
+mkdir -p ~/.config/opencode/plugins/ollama-websearch
+cd ~/.config/opencode/plugins/ollama-websearch
+npm init -y >/dev/null
+npm install @opencode/plugin
+```
+
+Create `index.ts` in that directory re-exporting the repo source:
+
+```ts
+export { default } from "/abs/path/to/opencode-ollama-websearch-plugin/src/index.ts"
+```
+
+Ensure the loader's `package.json` has `"main": "./index.ts"` (a `main` pointing at a missing or compiled file prevents loading). Reload after edits with `opencode service restart`, or `touch` the loader's `index.ts` to trigger a hot reload.
 
 ## Configuration
 
@@ -100,7 +107,7 @@ OpenCode will use the `ollama` provider for web searches and include source link
 
 ## How it works
 
-The plugin registers an `ollama` provider via OpenCode's `websearch` transform, calling `POST https://ollama.com/api/web_search` with your query and mapping results (title, url, content) into OpenCode's websearch result format.
+The plugin registers an `ollama` provider via OpenCode's `websearch` transform, calling `POST {baseURL}/api/web_search` with your query and mapping results (title, url, content) into OpenCode's websearch result format. The API key is resolved per query (integration → option → env var) so credential changes are picked up without restarting OpenCode.
 
 ## License
 
