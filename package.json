@@ -1,0 +1,50 @@
+{
+  "name": "opencode-ollama-websearch-plugin",
+  "version": "0.1.0",
+  "description": "OpenCode plugin that adds Ollama's web search API as a websearch provider.",
+  "type": "module",
+  "license": "MIT",
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "ollama",
+    "websearch",
+    "web-search"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vardhanreddyG/opencode-ollama-websearch-plugin.git"
+  },
+  "bugs": {
+    "url": "https://github.com/vardhanreddyG/opencode-ollama-websearch-plugin/issues"
+  },
+  "homepage": "https://github.com/vardhanreddyG/opencode-ollama-websearch-plugin#readme",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "prepack": "npm run build",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@opencode/plugin": "^2.0.0"
+  },
+  "devDependencies": {
+    "@opencode/plugin": "^2.0.18",
+    "@tsconfig/node20": "^20.1.2",
+    "@types/node": "^24",
+    "typescript": "^5.9.3"
+  }
+}
