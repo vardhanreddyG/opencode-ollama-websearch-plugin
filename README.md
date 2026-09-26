@@ -18,24 +18,26 @@ The plugin resolves your API key in this order:
 
 ## Install
 
-### CLI (global)
+### From GitHub (config)
 
-```sh
-opencode plugin add opencode-ollama-websearch-plugin
-```
-
-### Config
-
-Add it to `opencode.json(c)`:
+Add the Git spec to your `opencode.json(c)`. OpenCode resolves and installs it on startup:
 
 ```jsonc
 {
   "$schema": "https://opencode.ai/config.json",
-  "plugins": ["opencode-ollama-websearch-plugin"],
+  "plugins": ["github:vardhanreddyG/opencode-ollama-websearch-plugin"],
   "websearch": {
     "provider": "ollama"
   },
 }
+```
+
+> **Note:** `opencode plugin add github:vardhanreddyG/opencode-ollama-websearch-plugin` may fail with `git dep preparation failed` due to a known issue in OpenCode's bundled npm runtime (it reproduces with other plugin repos too). Installing via the config entry works reliably. The `dist/` build output is committed, so no build toolchain is needed on the installing machine.
+
+### From npm (once published)
+
+```sh
+opencode plugin add opencode-ollama-websearch-plugin
 ```
 
 Or with options:
