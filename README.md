@@ -78,6 +78,7 @@ Clone the repo and point OpenCode at it:
 | Option | Type | Default | Description |
 | --- | --- | --- | --- |
 | `apiKey` | string | integration / `OLLAMA_API_KEY` env var | Ollama API key |
+| `baseURL` | string | `https://ollama.com` | Base URL of the Ollama API |
 | `maxResults` | number | `5` | Max results per query (Ollama allows 1–10) |
 
 ## Usage
