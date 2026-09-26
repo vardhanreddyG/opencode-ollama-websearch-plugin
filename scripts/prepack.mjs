@@ -2,7 +2,8 @@
 // TypeScript toolchain is unavailable (e.g. Git dependency installs, which
 // do not install devDependencies). In that case the committed dist/ output
 // is used as-is.
-import { existsSync, execSync } from "node:fs"
+import { existsSync } from "node:fs"
+import { execSync } from "node:child_process"
 
 if (!existsSync(new URL("../dist/index.js", import.meta.url))) {
   try {
